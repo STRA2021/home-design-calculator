@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>מחשבון אומדן עלויות עיצוב הבית</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0d0d12;
+    --surface:#13131a;
+    --surface2:#1a1a26;
+    --line:#252535;
+    --line2:#2e2e45;
+    --ink:#e8e8f2;
+    --ink-soft:#8888aa;
+    --ink-muted:#4a4a68;
+    --accent:#4f7cff;
+    --accent-glow:rgba(79,124,255,.18);
+    --accent2:#7c5cfc;
+    --green:#00c896;
+    --red:#ff4d6a;
+    --shadow:0 24px 60px -16px rgba(0,0,0,.7);
+    --radius:14px;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{background:var(--bg);color:var(--ink);font-family:"Inter",sans-serif;-webkit-font-smoothing:antialiased}
+  body{display:flex;justify-content:center;padding:28px 16px;min-height:100vh}
+
+  .wrap{
+    width:100%;max-width:720px;background:var(--surface);
+    border-radius:22px;overflow:hidden;box-shadow:var(--shadow);
+    border:1px solid var(--line);position:relative;
+  }
+  /* פס עליון */
+  .topbar{
+    background:linear-gradient(135deg,#0d0d18 0%,#111120 60%,#14142a 100%);
+    color:var(--ink);padding:32px 36px 28px;position:relative;overflow:hidden;
+    border-bottom:1px solid var(--line);
+  }
+  .topbar::before{
+    content:"";position:absolute;right:-80px;top:-80px;width:260px;height:260px;
+    background:radial-gradient(circle,rgba(79,124,255,.12),transparent 65%);pointer-events:none;
+  }
+  .topbar::after{
+    content:"";position:absolute;left:-40px;bottom:-60px;width:180px;height:180px;
+    background:radial-gradient(circle,rgba(124,92,252,.08),transparent 65%);pointer-events:none;
+  }
+  .brand-tag{
+    display:inline-flex;align-items:center;gap:7px;
+    font-size:11px;letter-spacing:2.5px;text-transform:uppercase;
+    color:var(--accent);font-weight:600;margin-bottom:14px;
+    font-family:"Space Grotesk",sans-serif;
+  }
+  .brand-tag::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--accent);
+    box-shadow:0 0 8px var(--accent);}
+  .topbar h1{font-family:"Space Grotesk",sans-serif;font-weight:700;font-size:28px;line-height:1.25;letter-spacing:-.3px}
+  .topbar p{color:var(--ink-soft);margin-top:10px;font-size:14px;font-weight:400;max-width:88%;line-height:1.6}
+
+  /* התקדמות */
+  .steps{display:flex;gap:6px;padding:20px 36px 0}
+  .pip{flex:1;height:3px;border-radius:99px;background:var(--line2);transition:.4s}
+  .pip.on{background:linear-gradient(90deg,var(--accent),var(--accent2))}
+
+  .panel{padding:28px 36px 36px;animation:fade .4s ease}
+  @keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+  .sec-title{font-family:"Space Grotesk",sans-serif;font-size:20px;font-weight:700;margin-bottom:4px;letter-spacing:-.2px}
+  .sec-sub{color:var(--ink-soft);font-size:13.5px;margin-bottom:24px;line-height:1.5}
+
+  .field{margin-bottom:26px}
+  .field>label{display:block;font-weight:600;font-size:13px;margin-bottom:10px;
+    text-transform:uppercase;letter-spacing:1px;color:var(--ink-soft)}
+
+  /* כרטיסי בחירה */
+  .opts{display:grid;gap:8px}
+  .opts.two{grid-template-columns:1fr 1fr}
+  .opts.three{grid-template-columns:1fr 1fr 1fr}
+  .opt{
+    border:1px solid var(--line2);background:var(--surface2);border-radius:10px;padding:12px 14px;
+    cursor:pointer;transition:.15s;text-align:center;user-select:none;
+  }
+  .opt:hover{border-color:var(--accent);background:#1a1a2e;transform:translateY(-1px)}
+  .opt.sel{border-color:var(--accent);background:#111128;box-shadow:0 0 0 1px var(--accent),inset 0 0 20px var(--accent-glow)}
+  .opt .t{font-weight:600;font-size:13.5px;font-family:"Space Grotesk",sans-serif}
+  .opt .d{font-size:11.5px;color:var(--ink-muted);margin-top:3px}
+  .opt.sel .d{color:var(--ink-soft)}
+
+  /* קלט מ"ר */
+  .area-row{display:flex;align-items:center;gap:16px}
+  input[type=range]{
+    flex:1;height:4px;accent-color:var(--accent);
+    appearance:none;background:var(--line2);border-radius:99px;cursor:pointer;
+  }
+  input[type=range]::-webkit-slider-thumb{
+    appearance:none;width:18px;height:18px;border-radius:50%;
+    background:var(--accent);box-shadow:0 0 10px var(--accent-glow);border:2px solid #fff2;
+  }
+  .area-num{display:flex;align-items:baseline;gap:6px;min-width:100px;justify-content:flex-start}
+  .area-num input{width:72px;font-family:"Space Grotesk",sans-serif;font-size:32px;font-weight:700;
+    border:none;border-bottom:2px solid var(--accent);background:transparent;color:var(--ink);text-align:center}
+  .area-num span{font-size:13px;color:var(--ink-soft)}
+  input:focus{outline:none}
+
+  /* צ'קבוקסים קטגוריות */
+  .cat{display:flex;align-items:center;gap:12px;border:1px solid var(--line2);background:var(--surface2);
+    border-radius:10px;padding:13px 15px;cursor:pointer;transition:.15s;margin-bottom:8px}
+  .cat:hover{border-color:var(--accent);background:#1a1a2e}
+  .cat.sel{border-color:var(--accent);background:#111128;box-shadow:0 0 0 1px var(--accent),inset 0 0 16px var(--accent-glow)}
+  .box{width:20px;height:20px;border-radius:5px;border:1.5px solid var(--line2);flex-shrink:0;
+    display:flex;align-items:center;justify-content:center;transition:.15s;background:var(--surface)}
+  .cat.sel .box{background:var(--accent);border-color:var(--accent)}
+  .box svg{width:11px;height:11px;stroke:#fff;stroke-width:3;fill:none;opacity:0;transition:.15s}
+  .cat.sel .box svg{opacity:1}
+  .cat .ct{font-weight:600;font-size:14px;font-family:"Space Grotesk",sans-serif}
+  .cat .cd{font-size:12px;color:var(--ink-muted)}
+  .cat.sel .cd{color:var(--ink-soft)}
+
+  /* טופס ליד */
+  .lead-field{margin-bottom:15px}
+  .lead-field label{display:block;font-size:12px;font-weight:600;margin-bottom:7px;
+    text-transform:uppercase;letter-spacing:1px;color:var(--ink-soft)}
+  .lead-field input{width:100%;border:1px solid var(--line2);border-radius:10px;padding:13px 15px;
+    font-family:"Inter",sans-serif;font-size:15px;background:var(--surface2);color:var(--ink);transition:.15s}
+  .lead-field input::placeholder{color:var(--ink-muted)}
+  .lead-field input:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-glow)}
+  .lead-field input.err{border-color:var(--red);box-shadow:0 0 0 3px rgba(255,77,106,.12)}
+  .err-msg{color:var(--red);font-size:12px;margin-top:5px;display:none}
+  .err-msg.show{display:block}
+  .consent{display:flex;gap:9px;align-items:flex-start;font-size:12.5px;color:var(--ink-soft);margin-top:6px;line-height:1.6}
+  .consent input{margin-top:3px;accent-color:var(--accent);width:15px;height:15px}
+
+  /* כפתורים */
+  .nav{display:flex;gap:10px;margin-top:28px}
+  .btn{flex:1;border:none;border-radius:10px;padding:14px;font-family:"Space Grotesk",sans-serif;
+    font-size:15px;font-weight:600;cursor:pointer;transition:.18s;letter-spacing:-.1px}
+  .btn-primary{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;
+    box-shadow:0 4px 20px rgba(79,124,255,.3)}
+  .btn-primary:hover{filter:brightness(1.1);box-shadow:0 6px 28px rgba(79,124,255,.45);transform:translateY(-1px)}
+  .btn-primary:disabled{background:var(--line2);color:var(--ink-muted);cursor:not-allowed;box-shadow:none;transform:none;filter:none}
+  .btn-ghost{background:transparent;color:var(--ink-soft);border:1px solid var(--line2);flex:0 0 auto;padding:14px 20px}
+  .btn-ghost:hover{border-color:var(--ink-soft);color:var(--ink)}
+
+  /* תוצאה */
+  .result-hero{text-align:center;padding:10px 0 24px;border-bottom:1px solid var(--line);margin-bottom:24px;position:relative}
+  .result-hero::after{content:"";position:absolute;bottom:-1px;left:50%;transform:translateX(-50%);
+    width:60px;height:2px;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:99px}
+  .result-hero .lbl{font-size:11px;color:var(--ink-muted);font-weight:600;letter-spacing:2px;text-transform:uppercase}
+  .result-hero .big{font-family:"Space Grotesk",sans-serif;font-size:48px;font-weight:700;
+    background:linear-gradient(135deg,#fff 40%,var(--accent));-webkit-background-clip:text;-webkit-text-fill-color:transparent;
+    margin:8px 0 4px;line-height:1;letter-spacing:-1px}
+  .result-hero .range{font-size:13px;color:var(--ink-soft)}
+  .bdown{display:flex;flex-direction:column;gap:14px}
+  .brow .top{display:flex;justify-content:space-between;font-size:13.5px;margin-bottom:7px}
+  .brow .top .nm{font-weight:600;font-family:"Space Grotesk",sans-serif}
+  .brow .top .vl{font-weight:700;color:var(--accent);font-variant-numeric:tabular-nums;font-family:"Space Grotesk",sans-serif}
+  .bar{height:6px;background:var(--line2);border-radius:99px;overflow:hidden}
+  .bar>i{display:block;height:100%;border-radius:99px;width:0;transition:width 1s cubic-bezier(.2,.8,.2,1)}
+  .perm{text-align:center;margin-top:20px;font-size:13px;color:var(--ink-soft);
+    background:var(--surface2);border:1px solid var(--line2);border-radius:10px;padding:13px}
+  .perm b{color:var(--ink);font-family:"Space Grotesk",sans-serif}
+  .disclaimer{font-size:11px;color:var(--ink-muted);line-height:1.7;margin-top:18px;text-align:center}
+  .thanks{background:rgba(0,200,150,.07);border:1px solid rgba(0,200,150,.2);border-radius:10px;padding:13px;
+    font-size:13.5px;color:var(--green);text-align:center;margin-bottom:20px;font-weight:500;
+    font-family:"Space Grotesk",sans-serif}
+
+  @media (max-width:560px){
+    .topbar{padding:26px 22px}
+    .panel{padding:22px 22px 28px}
+    .steps{padding:18px 22px 0}
+    .opts.three{grid-template-columns:1fr}
+    .topbar h1{font-size:23px}
+    .result-hero .big{font-size:38px}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="topbar">
+    <div class="brand-tag">אומדן עלויות</div>
+    <h1>כמה יעלה לעצב את הבית שלכם?</h1>
+    <p>קבלו אומדן מיידי ומותאם אישית בכמה צעדים פשוטים. מבוסס על מחירי שוק עדכניים בישראל.</p>
+  </div>
+
+  <div class="steps">
+    <div class="pip on" id="pip0"></div>
+    <div class="pip" id="pip1"></div>
+    <div class="pip" id="pip2"></div>
+  </div>
+
+  <!-- שלב 1 -->
+  <div class="panel" id="step0">
+    <div class="sec-title">פרטי הפרויקט</div>
+    <div class="sec-sub">ספרו לנו על החלל שתרצו לעצב</div>
+
+    <div class="field">
+      <label>סוג הפרויקט</label>
+      <div class="opts two" id="ptype">
+        <div class="opt sel" data-k="full">    <div class="t">דירה / בית שלם</div><div class="d">שיפוץ ועיצוב כולל</div></div>
+        <div class="opt"     data-k="dry">     <div class="t">חדר מגורים</div><div class="d">סלון · שינה · עבודה</div></div>
+        <div class="opt"     data-k="kitchen"> <div class="t">מטבח</div><div class="d">חלל רטוב מורכב</div></div>
+        <div class="opt"     data-k="bath">    <div class="t">חדר רחצה</div><div class="d">אמבטיה · שירותים</div></div>
+        <div class="opt"     data-k="comm">    <div class="t">חלל מסחרי</div><div class="d">משרד · עסק · קליניקה</div></div>
+        <div class="opt"     data-k="outdoor"> <div class="t">מרפסת / חוץ</div><div class="d">מרפסת · גינה · גג</div></div>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>שטח לעיצוב (מ״ר)</label>
+      <div class="area-row">
+        <input type="range" id="areaRange" min="4" max="300" value="80" step="1">
+        <div class="area-num"><input type="number" id="areaNum" value="80" min="1" max="2000"><span>מ״ר</span></div>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>רמת גימור</label>
+      <div class="opts three" id="tier">
+        <div class="opt"     data-k="basic">   <div class="t">בסיסי</div><div class="d">חסכוני · מדף</div></div>
+        <div class="opt sel" data-k="standard"><div class="t">סטנדרט</div><div class="d">איכותי · מאוזן</div></div>
+        <div class="opt"     data-k="premium"> <div class="t">פרימיום</div><div class="d">יוקרה · בהזמנה</div></div>
+      </div>
+    </div>
+
+    <div class="field" style="margin-bottom:8px">
+      <label>מה לכלול באומדן?</label>
+      <div id="cats"></div>
+    </div>
+
+    <div class="nav">
+      <button class="btn btn-primary" id="toLead">להמשך לקבלת האומדן ←</button>
+    </div>
+  </div>
+
+  <!-- שלב 2: ליד -->
+  <div class="panel" id="step1" style="display:none">
+    <div class="sec-title">כמעט שם</div>
+    <div class="sec-sub">השאירו פרטים ונציג את האומדן המלא + נחזור אליכם עם הצעה מותאמת</div>
+
+    <div class="lead-field">
+      <label>שם מלא</label>
+      <input type="text" id="lname" placeholder="שם פרטי ומשפחה" autocomplete="name">
+      <div class="err-msg" id="errName">נא להזין שם</div>
+    </div>
+    <div class="lead-field">
+      <label>טלפון</label>
+      <input type="tel" id="phone" placeholder="050-0000000" autocomplete="tel">
+      <div class="err-msg" id="errPhone">נא להזין מספר טלפון תקין</div>
+    </div>
+    <div class="lead-field">
+      <label>אימייל</label>
+      <input type="email" id="email" placeholder="name@example.com" autocomplete="email">
+      <div class="err-msg" id="errEmail">נא להזין כתובת אימייל תקינה</div>
+    </div>
+    <label class="consent">
+      <input type="checkbox" id="consent">
+      <span>אני מאשר/ת קבלת האומדן וחזרה טלפונית / במייל בנוגע לפרויקט.</span>
+    </label>
+
+    <div class="nav">
+      <button class="btn btn-ghost" id="backToStep0">חזרה</button>
+      <button class="btn btn-primary" id="toResult" disabled>הצג לי את האומדן ←</button>
+    </div>
+  </div>
+
+  <!-- שלב 3: תוצאה -->
+  <div class="panel" id="step2" style="display:none">
+    <div class="thanks" id="thanksMsg"></div>
+    <div class="result-hero">
+      <div class="lbl">אומדן עלות משוער לפרויקט</div>
+      <div class="big" id="total">₪0</div>
+      <div class="range" id="rangeTxt"></div>
+    </div>
+    <div class="bdown" id="breakdown"></div>
+    <div class="perm" id="perm"></div>
+    <div class="disclaimer">
+      * האומדן הוא הערכה ראשונית בלבד המבוססת על ממוצעי שוק בישראל ועשוי להשתנות בהתאם למצב הנכס,
+      מורכבות העבודה, בחירת ספקים וחומרים. הצעת מחיר סופית תינתן לאחר פגישת אפיון.
+    </div>
+    <div class="nav">
+      <button class="btn btn-ghost" id="restart">חישוב חדש</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ===========================================================
+   מודל עלויות — אמדות שוק ישראלי (₪ למ״ר) לפי רמת גימור
+   ערוך כאן בקלות את המספרים בהתאם למחירון שלך
+   =========================================================== */
+const RATES = {
+  labor:     { basic:1000, standard:2500, premium:5000 }, // עבודה וקבלנים
+  materials: { basic:350, standard:700,  premium:2000 }, // חומרי גמר
+  furniture: { basic:800, standard:1800, premium:4000 }, // ריהוט ואביזרים
+  design:    { basic:360, standard:450,  premium:750  }  // שכר עיצוב/אדריכל
+};
+/* מקדם מורכבות לפי סוג חלל (חללים רטובים יקרים יותר למ״ר) */
+const TYPE_MULT = { full:1.0, dry:0.8, kitchen:1.7, bath:1.9, comm:1.1, outdoor:0.7 };
+
+const CATS = [
+  { k:'labor',     t:'עבודה וקבלנים',     d:'הריסה, בנייה, גבס, חשמל ואינסטלציה' },
+  { k:'materials', t:'חומרי גמר',          d:'ריצוף, חיפויים, צבע, תאורה' },
+  { k:'furniture', t:'ריהוט ואביזרים',     d:'ריהוט, נגרות, טקסטיל, אקססוריז' },
+  { k:'design',    t:'שכר עיצוב / אדריכל',  d:'תכנון, הדמיות, כתב כמויות, ליווי' }
+];
+const COLORS = { labor:'#4f7cff', materials:'#7c5cfc', furniture:'#00c896', design:'#ff7eaa' };
+
+/* מצב */
+const state = { ptype:'full', area:80, tier:'standard', cats:{labor:true,materials:true,furniture:true,design:true} };
+
+/* ---- בניית צ'קבוקסים ---- */
+const catWrap = document.getElementById('cats');
+CATS.forEach(c=>{
+  const el = document.createElement('div');
+  el.className='cat sel'; el.dataset.k=c.k;
+  el.innerHTML=`<div class="box"><svg viewBox="0 0 24 24"><polyline points="4 12 9 18 20 6"/></svg></div>
+    <div><div class="ct">${c.t}</div><div class="cd">${c.d}</div></div>`;
+  el.onclick=()=>{ state.cats[c.k]=!state.cats[c.k]; el.classList.toggle('sel',state.cats[c.k]); };
+  catWrap.appendChild(el);
+});
+
+/* ---- בחירות יחיד ---- */
+function singleSelect(wrapId,key){
+  const w=document.getElementById(wrapId);
+  w.querySelectorAll('.opt').forEach(o=>o.onclick=()=>{
+    w.querySelectorAll('.opt').forEach(x=>x.classList.remove('sel'));
+    o.classList.add('sel'); state[key]=o.dataset.k;
+  });
+}
+singleSelect('ptype','ptype');
+singleSelect('tier','tier');
+
+/* ---- מ"ר ---- */
+const aR=document.getElementById('areaRange'), aN=document.getElementById('areaNum');
+aR.oninput=()=>{ aN.value=aR.value; state.area=+aR.value; };
+aN.oninput=()=>{ let v=Math.max(1,Math.min(2000,+aN.value||0)); state.area=v; if(v<=300)aR.value=v; };
+
+/* ---- ניווט ---- */
+const steps=[document.getElementById('step0'),document.getElementById('step1'),document.getElementById('step2')];
+const pips=[document.getElementById('pip0'),document.getElementById('pip1'),document.getElementById('pip2')];
+function goto(n){ steps.forEach((s,i)=>s.style.display=i===n?'block':'none');
+  pips.forEach((p,i)=>p.classList.toggle('on',i<=n)); window.scrollTo({top:0,behavior:'smooth'}); }
+
+document.getElementById('toLead').onclick=()=>{
+  if(!Object.values(state.cats).some(Boolean)){ alert('נא לבחור לפחות קטגוריה אחת לאומדן'); return; }
+  goto(1);
+};
+document.getElementById('backToStep0').onclick=()=>goto(0);
+document.getElementById('restart').onclick=()=>{ goto(0); };
+
+/* ---- ולידציה של טופס הליד ---- */
+const f={name:document.getElementById('lname'),phone:document.getElementById('phone'),email:document.getElementById('email'),consent:document.getElementById('consent')};
+const toResult=document.getElementById('toResult');
+function valid(){
+  const okName=f.name.value.trim().length>=2;
+  const okPhone=/^[0-9\-\+\s]{9,15}$/.test(f.phone.value.trim());
+  const okEmail=/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(f.email.value.trim());
+  toResult.disabled=!(okName&&okPhone&&okEmail&&f.consent.checked);
+  return {okName,okPhone,okEmail};
+}
+[f.name,f.phone,f.email].forEach(i=>i.oninput=valid); f.consent.onchange=valid;
+
+toResult.onclick=()=>{
+  const v=valid();
+  f.name.classList.toggle('err',!v.okName); document.getElementById('errName').classList.toggle('show',!v.okName);
+  f.phone.classList.toggle('err',!v.okPhone); document.getElementById('errPhone').classList.toggle('show',!v.okPhone);
+  f.email.classList.toggle('err',!v.okEmail); document.getElementById('errEmail').classList.toggle('show',!v.okEmail);
+  if(toResult.disabled) return;
+
+  /* ====== כאן מחברים את הליד למערכת שלך (CRM / מייל / Zapier) ======
+     const lead = { name:f.name.value, phone:f.phone.value, email:f.email.value, ...state, estimate:calc().total };
+     fetch('https://YOUR-ENDPOINT', {method:'POST', body:JSON.stringify(lead)});
+     ================================================================= */
+  render();
+  goto(2);
+};
+
+/* ---- חישוב ---- */
+function calc(){
+  const mult=TYPE_MULT[state.ptype]||1;
+  const rows=[]; let total=0;
+  CATS.forEach(c=>{
+    if(!state.cats[c.k]) return;
+    let rate=RATES[c.k][state.tier];
+    /* שכר עיצוב לא מושפע ממקדם מורכבות החלל + מינימום 12,000 ₪ */
+    let amt=Math.round(rate*state.area*(c.k==='design'?1:mult));
+    if(c.k==='design') amt=Math.max(amt,12000);
+    rows.push({...c,amt}); total+=amt;
+  });
+  return {rows,total};
+}
+const fmt=n=>'₪'+n.toLocaleString('he-IL');
+
+function render(){
+  const {rows,total}=calc();
+  const lo=Math.round(total*0.85/100)*100, hi=Math.round(total*1.15/100)*100;
+  document.getElementById('total').textContent=fmt(total);
+  document.getElementById('rangeTxt').textContent=`טווח משוער: ${fmt(lo)} – ${fmt(hi)}`;
+  const max=Math.max(...rows.map(r=>r.amt),1);
+  const bd=document.getElementById('breakdown'); bd.innerHTML='';
+  rows.forEach((r,i)=>{
+    const el=document.createElement('div'); el.className='brow';
+    el.innerHTML=`<div class="top"><span class="nm">${r.t}</span><span class="vl">${fmt(r.amt)}</span></div>
+      <div class="bar"><i style="background:${COLORS[r.k]}"></i></div>`;
+    bd.appendChild(el);
+    setTimeout(()=>el.querySelector('i').style.width=(r.amt/max*100)+'%',60+i*120);
+  });
+  document.getElementById('perm').innerHTML=`עלות ממוצעת למ״ר בפרויקט שלך: <b>${fmt(Math.round(total/state.area))}</b> · ${state.area} מ״ר`;
+  const tierTxt={basic:'בסיסי',standard:'סטנדרט',premium:'פרימיום'}[state.tier];
+  document.getElementById('thanksMsg').textContent=`תודה ${f.name.value.split(' ')[0]}! הנה האומדן לרמת גימור ${tierTxt}. נציג יחזור אליך בהקדם.`;
+}
+valid();
+</script>
+</body>
+</html>
