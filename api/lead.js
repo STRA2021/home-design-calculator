@@ -35,7 +35,13 @@ export default async function handler(req, res) {
   const webhook = process.env.WEBHOOK_URL;
   if (!webhook) {
     console.error("WEBHOOK_URL env var is not set");
-    return res.status(500).json({ ok: false, error: "Server not configured" });
+    // TEMP DEBUG: help locate the misconfiguration.
+    const hookKeys = Object.keys(process.env).filter((k) => /hook/i.test(k));
+    return res.status(500).json({
+      ok: false,
+      error: "Server not configured",
+      debug: { vercelEnv: process.env.VERCEL_ENV || null, hookKeys },
+    });
   }
 
   // Vercel parses JSON bodies automatically; guard anyway.
