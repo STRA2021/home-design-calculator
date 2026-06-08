@@ -7,7 +7,7 @@ captures the lead.
 
 The browser **never** talks to your Make/Zapier webhook directly. Instead:
 
-1. [calculator.html](calculator.html) POSTs the lead to `/api/lead`.
+1. [index.html](index.html) POSTs the lead to `/api/lead`.
 2. [api/lead.js](api/lead.js) (a Vercel serverless function) validates it,
    blocks bots, and forwards it to your webhook.
 
