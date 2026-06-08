@@ -31,6 +31,7 @@ export default async function handler(req, res) {
     return res.status(405).json({ ok: false, error: "Method not allowed" });
   }
 
+  try {
   const webhook = process.env.WEBHOOK_URL;
   if (!webhook) {
     console.error("WEBHOOK_URL env var is not set");
@@ -122,4 +123,11 @@ export default async function handler(req, res) {
   }
 
   return res.status(200).json({ ok: true });
+  } catch (err) {
+    // TEMP DEBUG: surface the real error so we can diagnose the 500.
+    console.error("Unhandled error in /api/lead", err);
+    return res
+      .status(500)
+      .json({ ok: false, error: "Internal error", debug: String(err && err.stack || err) });
+  }
 }
