@@ -353,7 +353,7 @@ document.getElementById('toLead').onclick=()=>{
   goto(1);
 };
 document.getElementById('backToStep0').onclick=()=>goto(0);
-document.getElementById('restart').onclick=()=>{ goto(0); };
+document.getElementById('restart').onclick=()=>{ resetLead(); goto(0); };
 
 /* ---- ולידציה של טופס הליד ---- */
 const f={name:document.getElementById('lname'),phone:document.getElementById('phone'),email:document.getElementById('email'),consent:document.getElementById('consent')};
@@ -391,6 +391,21 @@ function valid(showAll){
   f[k].addEventListener('input',()=>{ if(touched[k]) valid(false); });
 });
 f.consent.addEventListener('change',()=>{ touched.consent=true; valid(false); });
+
+/* איפוס טופס הליד — לחישוב חדש (מנקה שדות, שגיאות ומפעיל מחדש את הכפתור) */
+function resetLead(){
+  toResult.disabled=false;
+  ['name','phone','email'].forEach(k=>{
+    f[k].value='';
+    f[k].classList.remove('err');
+    errEls[k].classList.remove('show');
+    touched[k]=false;
+  });
+  f.consent.checked=false;
+  touched.consent=false;
+  errEls.consent.classList.remove('show');
+  document.getElementById('errSubmit').classList.remove('show');
+}
 
 toResult.onclick=async()=>{
   const c=valid(true);
