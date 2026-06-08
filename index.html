@@ -124,7 +124,7 @@
     text-transform:uppercase;letter-spacing:1px;color:var(--ink-soft)}
   .lead-field input{width:100%;border:1px solid var(--line2);border-radius:10px;padding:13px 15px;
     font-family:"Inter",sans-serif;font-size:15px;background:var(--surface2);color:var(--ink);transition:.15s}
-  .lead-field input::placeholder{color:var(--ink-muted)}
+  .lead-field input::placeholder{color:var(--ink-soft)}
   .lead-field input:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-glow)}
   .lead-field input.err{border-color:var(--red);box-shadow:0 0 0 3px rgba(255,77,106,.12)}
   .err-msg{color:var(--red);font-size:12px;margin-top:5px;display:none}
@@ -246,7 +246,7 @@
     </div>
     <div class="lead-field">
       <label>טלפון</label>
-      <input type="tel" id="phone" placeholder="050-0000000" autocomplete="tel">
+      <input type="tel" id="phone" dir="rtl" placeholder="050-0000000" autocomplete="tel">
       <div class="err-msg" id="errPhone">מספר טלפון לא תקין — יש להזין 9–15 ספרות</div>
     </div>
     <div class="lead-field">
