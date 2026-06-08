@@ -85,7 +85,7 @@
   .opt:hover{border-color:var(--accent);background:#1a1a2e;transform:translateY(-1px)}
   .opt.sel{border-color:var(--accent);background:#111128;box-shadow:0 0 0 1px var(--accent),inset 0 0 20px var(--accent-glow)}
   .opt .t{font-weight:600;font-size:13.5px;font-family:"Space Grotesk",sans-serif}
-  .opt .d{font-size:11.5px;color:var(--ink-muted);margin-top:3px}
+  .opt .d{font-size:11.5px;color:var(--ink-soft);margin-top:3px}
   .opt.sel .d{color:var(--ink-soft)}
 
   /* קלט מ"ר */
@@ -115,7 +115,7 @@
   .box svg{width:11px;height:11px;stroke:#fff;stroke-width:3;fill:none;opacity:0;transition:.15s}
   .cat.sel .box svg{opacity:1}
   .cat .ct{font-weight:600;font-size:14px;font-family:"Space Grotesk",sans-serif}
-  .cat .cd{font-size:12px;color:var(--ink-muted)}
+  .cat .cd{font-size:12px;color:var(--ink-soft)}
   .cat.sel .cd{color:var(--ink-soft)}
 
   /* טופס ליד */
@@ -242,26 +242,31 @@
     <div class="lead-field">
       <label>שם מלא</label>
       <input type="text" id="lname" placeholder="שם פרטי ומשפחה" autocomplete="name">
-      <div class="err-msg" id="errName">נא להזין שם</div>
+      <div class="err-msg" id="errName">נא להזין שם מלא (לפחות 2 תווים)</div>
     </div>
     <div class="lead-field">
       <label>טלפון</label>
       <input type="tel" id="phone" placeholder="050-0000000" autocomplete="tel">
-      <div class="err-msg" id="errPhone">נא להזין מספר טלפון תקין</div>
+      <div class="err-msg" id="errPhone">מספר טלפון לא תקין — יש להזין 9–15 ספרות</div>
     </div>
     <div class="lead-field">
       <label>אימייל</label>
       <input type="email" id="email" placeholder="name@example.com" autocomplete="email">
-      <div class="err-msg" id="errEmail">נא להזין כתובת אימייל תקינה</div>
+      <div class="err-msg" id="errEmail">כתובת אימייל לא תקינה (לדוגמה: name@example.com)</div>
     </div>
+    <!-- honeypot: hidden from users, bots tend to fill it -->
+    <input type="text" id="company" name="company" tabindex="-1" autocomplete="off"
+           aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0">
+    <div class="err-msg" id="errSubmit">אירעה שגיאה בשליחה. נא לנסות שוב.</div>
     <label class="consent">
       <input type="checkbox" id="consent">
       <span>אני מאשר/ת קבלת האומדן וחזרה טלפונית / במייל בנוגע לפרויקט.</span>
     </label>
+    <div class="err-msg" id="errConsent">יש לאשר קבלת האומדן וחזרה כדי להמשיך</div>
 
     <div class="nav">
       <button class="btn btn-ghost" id="backToStep0">חזרה</button>
-      <button class="btn btn-primary" id="toResult" disabled>הצג לי את האומדן ←</button>
+      <button class="btn btn-primary" id="toResult">הצג לי את האומדן ←</button>
     </div>
   </div>
 
@@ -353,26 +358,67 @@ document.getElementById('restart').onclick=()=>{ goto(0); };
 /* ---- ולידציה של טופס הליד ---- */
 const f={name:document.getElementById('lname'),phone:document.getElementById('phone'),email:document.getElementById('email'),consent:document.getElementById('consent')};
 const toResult=document.getElementById('toResult');
-function valid(){
-  const okName=f.name.value.trim().length>=2;
-  const okPhone=/^[0-9\-\+\s]{9,15}$/.test(f.phone.value.trim());
-  const okEmail=/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(f.email.value.trim());
-  toResult.disabled=!(okName&&okPhone&&okEmail&&f.consent.checked);
-  return {okName,okPhone,okEmail};
+const errEls={
+  name:document.getElementById('errName'),
+  phone:document.getElementById('errPhone'),
+  email:document.getElementById('errEmail'),
+  consent:document.getElementById('errConsent')
+};
+/* שדה נחשב "נגוע" רק אחרי שהמשתמש יצא ממנו — כדי לא לצעוק עליו מההתחלה */
+const touched={name:false,phone:false,email:false,consent:false};
+
+function checks(){
+  return {
+    name: f.name.value.trim().length>=2,
+    phone: /^[0-9\-\+\s]{9,15}$/.test(f.phone.value.trim()),
+    email: /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(f.email.value.trim()),
+    consent: f.consent.checked
+  };
 }
-[f.name,f.phone,f.email].forEach(i=>i.oninput=valid); f.consent.onchange=valid;
+/* מציג/מסתיר הודעות שגיאה. showAll=true מציג הכל (בלחיצה על הכפתור) */
+function valid(showAll){
+  const c=checks();
+  ['name','phone','email'].forEach(k=>{
+    const bad=!c[k] && (touched[k]||showAll);
+    f[k].classList.toggle('err',bad);
+    errEls[k].classList.toggle('show',bad);
+  });
+  errEls.consent.classList.toggle('show', !c.consent && (touched.consent||showAll));
+  return c;
+}
+['name','phone','email'].forEach(k=>{
+  f[k].addEventListener('blur',()=>{ touched[k]=true; valid(false); });
+  f[k].addEventListener('input',()=>{ if(touched[k]) valid(false); });
+});
+f.consent.addEventListener('change',()=>{ touched.consent=true; valid(false); });
 
-toResult.onclick=()=>{
-  const v=valid();
-  f.name.classList.toggle('err',!v.okName); document.getElementById('errName').classList.toggle('show',!v.okName);
-  f.phone.classList.toggle('err',!v.okPhone); document.getElementById('errPhone').classList.toggle('show',!v.okPhone);
-  f.email.classList.toggle('err',!v.okEmail); document.getElementById('errEmail').classList.toggle('show',!v.okEmail);
-  if(toResult.disabled) return;
+toResult.onclick=async()=>{
+  const c=valid(true);
+  if(!(c.name&&c.phone&&c.email&&c.consent)){
+    const firstBad=['name','phone','email','consent'].find(k=>!c[k]);
+    if(firstBad) f[firstBad].focus();
+    return;
+  }
 
-  /* ====== כאן מחברים את הליד למערכת שלך (CRM / מייל / Zapier) ======
-     const lead = { name:f.name.value, phone:f.phone.value, email:f.email.value, ...state, estimate:calc().total };
-     fetch('https://YOUR-ENDPOINT', {method:'POST', body:JSON.stringify(lead)});
-     ================================================================= */
+  /* ---- שליחת הליד דרך הפונקציה המאובטחת (/api/lead) ---- */
+  const errSubmit=document.getElementById('errSubmit');
+  errSubmit.classList.remove('show');
+  toResult.disabled=true;
+  const lead={
+    name:f.name.value.trim(), phone:f.phone.value.trim(), email:f.email.value.trim(),
+    consent:f.consent.checked,
+    company:document.getElementById('company').value, // honeypot
+    ptype:state.ptype, tier:state.tier, area:state.area, cats:state.cats,
+    estimate:calc().total
+  };
+  try{
+    const res=await fetch('/api/lead',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(lead)});
+    if(!res.ok) throw new Error('submit failed');
+  }catch(err){
+    errSubmit.classList.add('show');
+    toResult.disabled=false;
+    return;
+  }
   render();
   goto(2);
 };
@@ -411,7 +457,6 @@ function render(){
   const tierTxt={basic:'בסיסי',standard:'סטנדרט',premium:'פרימיום'}[state.tier];
   document.getElementById('thanksMsg').textContent=`תודה ${f.name.value.split(' ')[0]}! הנה האומדן לרמת גימור ${tierTxt}. נציג יחזור אליך בהקדם.`;
 }
-valid();
 </script>
 </body>
 </html>
